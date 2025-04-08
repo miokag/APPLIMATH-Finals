@@ -45,6 +45,8 @@ public class EnhancedMeshGenerator : MonoBehaviour
     // For Jumping
     public float jumpForce = 8f;
     private bool canJump = true;
+    public float gravityScale = 2f;        // Makes falling slower
+    public float airMovementMultiplier = 0.5f; // Half speed in air
 
     void Start()
     {
@@ -258,13 +260,13 @@ public class EnhancedMeshGenerator : MonoBehaviour
         if (isGrounded)
         {
             playerVelocity.y = 0;
-            canJump = true; // Reset jump ability when grounded
+            canJump = true;
         }
         
-        // Apply gravity
+        // Apply gravity with scaling for slower descent
         if (!isGrounded)
         {
-            playerVelocity.y -= gravity * Time.deltaTime;
+            playerVelocity.y -= gravity * gravityScale * Time.deltaTime;
         }
         
         // Get horizontal input
@@ -272,17 +274,20 @@ public class EnhancedMeshGenerator : MonoBehaviour
         if (Input.GetKey(KeyCode.A)) horizontal -= 1;
         if (Input.GetKey(KeyCode.D)) horizontal += 1;
         
-        // Jump input
+        // Apply movement speed multiplier when in air
+        float currentSpeed = isGrounded ? movementSpeed : movementSpeed * airMovementMultiplier;
+        
+        // Jump input - immediate strong upward force
         if (Input.GetKeyDown(KeyCode.Space) && canJump)
         {
             playerVelocity.y = jumpForce;
             isGrounded = false;
-            canJump = false; // Prevent double jumping
+            canJump = false;
         }
         
         // Update player position based on input
         Vector3 newPos = pos;
-        newPos.x += horizontal * movementSpeed * Time.deltaTime;
+        newPos.x += horizontal * currentSpeed * Time.deltaTime;
         
         // Apply horizontal movement if no collision
         if (!CheckCollisionAt(playerID, new Vector3(newPos.x, pos.y, pos.z)))
@@ -307,7 +312,7 @@ public class EnhancedMeshGenerator : MonoBehaviour
         }
         else
         {
-            // No collision, apply gravity
+            // No collision, apply movement
             pos.y = newPos.y;
             isGrounded = false;
         }
@@ -316,7 +321,7 @@ public class EnhancedMeshGenerator : MonoBehaviour
         Matrix4x4 newMatrix = Matrix4x4.TRS(pos, rot, scale);
         matrices[colliderIds.IndexOf(playerID)] = newMatrix;
         
-        // Update collider position - properly handle rectangular shape
+        // Update collider position
         CollisionManager.Instance.UpdateCollider(playerID, pos, new Vector3(width * scale.x, height * scale.y, depth * scale.z));
         CollisionManager.Instance.UpdateMatrix(playerID, newMatrix);
         
