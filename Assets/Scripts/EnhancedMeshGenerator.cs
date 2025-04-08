@@ -41,6 +41,10 @@ public class EnhancedMeshGenerator : MonoBehaviour
     public float groundY = -20f;
     public float groundWidth = 200f;
     public float groundDepth = 200f;
+    
+    // For Jumping
+    public float jumpForce = 8f;
+    private bool canJump = true;
 
     void Start()
     {
@@ -254,6 +258,7 @@ public class EnhancedMeshGenerator : MonoBehaviour
         if (isGrounded)
         {
             playerVelocity.y = 0;
+            canJump = true; // Reset jump ability when grounded
         }
         
         // Apply gravity
@@ -266,6 +271,14 @@ public class EnhancedMeshGenerator : MonoBehaviour
         float horizontal = 0;
         if (Input.GetKey(KeyCode.A)) horizontal -= 1;
         if (Input.GetKey(KeyCode.D)) horizontal += 1;
+        
+        // Jump input
+        if (Input.GetKeyDown(KeyCode.Space) && canJump)
+        {
+            playerVelocity.y = jumpForce;
+            isGrounded = false;
+            canJump = false; // Prevent double jumping
+        }
         
         // Update player position based on input
         Vector3 newPos = pos;
@@ -313,7 +326,7 @@ public class EnhancedMeshGenerator : MonoBehaviour
             cameraFollow.SetPlayerPosition(pos);
         }
     }
-    
+        
     bool CheckCollisionAt(int id, Vector3 position)
     {
         return CollisionManager.Instance.CheckCollision(id, position, out _);
