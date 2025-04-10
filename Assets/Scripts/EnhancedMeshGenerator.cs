@@ -25,6 +25,12 @@ public class EnhancedMeshGenerator : MonoBehaviour
     private Vector3 playerVelocity = Vector3.zero;
     private bool isGrounded = false;
     
+    // For Other Scripts
+    public int GetPlayerID() => playerID;
+    public List<Matrix4x4> GetMatrices() => matrices;
+    public List<int> GetColliderIds() => colliderIds;
+    public Vector3 GetPlayerSize() => new Vector3(width, height, depth);
+    
     // Camera reference
     public PlayerCameraFollow cameraFollow;
     
@@ -45,8 +51,8 @@ public class EnhancedMeshGenerator : MonoBehaviour
     // For Jumping
     public float jumpForce = 8f;
     private bool canJump = true;
-    public float gravityScale = 2f;        // Makes falling slower
-    public float airMovementMultiplier = 0.5f; // Half speed in air
+    public float gravityScale = 2f;
+    public float airMovementMultiplier = 0.5f;
 
     void Start()
     {
