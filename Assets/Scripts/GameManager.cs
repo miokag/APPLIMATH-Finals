@@ -12,6 +12,8 @@ public class GameManager : MonoBehaviour
     public float invincibilityDuration = 5f;
     private int currentHealth;
     private bool isInvincible = false;
+    // For Other Scripts
+    public int CurrentHealth => currentHealth;
 
     // UI Elements
     [Header("UI Elements")]
@@ -27,6 +29,8 @@ public class GameManager : MonoBehaviour
 
     // Power-up references
     private PowerUpManager powerUpManager;
+    
+    
 
     void Awake()
     {
@@ -76,13 +80,19 @@ public class GameManager : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
-        if (isInvincible) return;
+        if (isInvincible) 
+        {
+            Debug.Log("Damage blocked by invincibility!");
+            return;
+        }
 
         currentHealth -= damage;
+        Debug.Log($"Player took {damage} damage! Health: {currentHealth}/{maxHealth}");
         UpdateHealthUI();
 
         if (currentHealth <= 0)
         {
+            Debug.Log("Player died!");
             GameOver("You died!");
         }
     }

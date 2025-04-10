@@ -30,7 +30,6 @@ public class EnhancedMeshGenerator : MonoBehaviour
     public List<Matrix4x4> GetMatrices() => matrices;
     public List<int> GetColliderIds() => colliderIds;
     public Vector3 GetPlayerSize() => new Vector3(width, height, depth);
-    
     // Camera reference
     public PlayerCameraFollow cameraFollow;
     

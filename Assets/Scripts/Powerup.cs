@@ -6,10 +6,11 @@ public class PowerUpManager : MonoBehaviour
     public EnhancedMeshGenerator meshGenerator;
     public Material healthPowerUpMaterial;
     public Material invincibilityPowerUpMaterial;
-    public Material fireballPowerUpMaterial;  // New material for fireball
+    public Material fireballPowerUpMaterial;
     public int powerUpCount = 10;
     public float powerUpHeight = 1f;
     public float powerUpSize = 0.5f;
+    public float spawnPadding = 2f; // Added spawn padding
 
     private Mesh triangleMesh;
     private Mesh quadMesh;
@@ -21,12 +22,11 @@ public class PowerUpManager : MonoBehaviour
     {
         Health,
         Invincibility,
-        Fireball  // New power-up type
+        Fireball
     }
 
     void Start()
     {
-        // Enable instancing on materials
         if (healthPowerUpMaterial != null) healthPowerUpMaterial.enableInstancing = true;
         if (invincibilityPowerUpMaterial != null) invincibilityPowerUpMaterial.enableInstancing = true;
         if (fireballPowerUpMaterial != null) fireballPowerUpMaterial.enableInstancing = true;
@@ -37,7 +37,6 @@ public class PowerUpManager : MonoBehaviour
 
     void CreatePowerUpMeshes()
     {
-        // Triangle mesh for health and fireball power-ups
         triangleMesh = new Mesh();
         Vector3[] triangleVertices = new Vector3[4]
         {
@@ -50,7 +49,6 @@ public class PowerUpManager : MonoBehaviour
         triangleMesh.triangles = new int[12] { 0, 2, 1, 0, 1, 3, 1, 2, 3, 2, 0, 3 };
         triangleMesh.RecalculateNormals();
 
-        // Quad mesh for invincibility power-up
         quadMesh = new Mesh();
         Vector3[] quadVertices = new Vector3[4]
         {
@@ -70,13 +68,39 @@ public class PowerUpManager : MonoBehaviour
 
         for (int i = 0; i < powerUpCount; i++)
         {
-            Vector3 position = new Vector3(
-                Random.Range(playerStartX + 5f, meshGenerator.maxX),
-                meshGenerator.groundY + powerUpHeight,
-                meshGenerator.constantZPosition
-            );
+            Vector3 position;
+            bool positionValid;
+            int attempts = 0;
+            const int maxAttempts = 50;
 
-            // Now includes Fireball in random selection
+            do
+            {
+                position = new Vector3(
+                    Random.Range(playerStartX + 5f, meshGenerator.maxX - spawnPadding),
+                    meshGenerator.groundY + powerUpHeight,
+                    meshGenerator.constantZPosition
+                );
+
+                positionValid = true;
+                
+                // Check against other power-ups
+                for (int j = 0; j < powerUpMatrices.Count; j++)
+                {
+                    Vector3 otherPos = powerUpMatrices[j].GetPosition();
+                    if (Vector3.Distance(position, otherPos) < spawnPadding * 2f)
+                    {
+                        positionValid = false;
+                        break;
+                    }
+                }
+
+                attempts++;
+                if (attempts >= maxAttempts) break;
+
+            } while (!positionValid && attempts < maxAttempts);
+
+            if (!positionValid) continue;
+
             PowerUpType type = (PowerUpType)Random.Range(0, 3);
             Quaternion rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
             Vector3 scale = Vector3.one;
