@@ -71,43 +71,20 @@ public class EnemyManager : MonoBehaviour
     {
         if (meshGen == null) return;
 
-        // Get player's starting X position (center is at x=0)
         float playerStartX = 0f;
-
+        float rightSideLength = meshGen.maxX - playerStartX;
+        float sectionLength = rightSideLength / enemyCount;
+    
         for (int i = 0; i < enemyCount; i++)
         {
-            Vector3 position;
-            bool positionValid;
-            int attempts = 0;
-            const int maxAttempts = 50;
-
-            do
-            {
-                // Only spawn on right side (positive X) of player
-                position = new Vector3(
-                    Random.Range(playerStartX + 5f, meshGen.maxX - spawnPadding), // Start 5 units right of player
-                    meshGen.groundY + meshGen.height, 
-                    meshGen.constantZPosition
-                );
-
-                positionValid = true;
-                
-                for (int j = 0; j < enemyMatrices.Count; j++)
-                {
-                    Vector3 otherPos = enemyMatrices[j].GetPosition();
-                    if (Vector3.Distance(position, otherPos) < spawnPadding * 2f)
-                    {
-                        positionValid = false;
-                        break;
-                    }
-                }
-
-                attempts++;
-                if (attempts >= maxAttempts) break;
-
-            } while (!positionValid && attempts < maxAttempts);
-
-            if (!positionValid) continue;
+            float sectionStart = playerStartX + (i * sectionLength);
+            float sectionEnd = sectionStart + sectionLength;
+        
+            Vector3 position = new Vector3(
+                Random.Range(sectionStart + spawnPadding, sectionEnd - spawnPadding),
+                meshGen.groundY + meshGen.height,
+                meshGen.constantZPosition
+            );
 
             Quaternion rotation = Quaternion.identity;
             Vector3 scale = Vector3.one * enemySize;

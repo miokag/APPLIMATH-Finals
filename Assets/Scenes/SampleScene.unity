@@ -416,7 +416,7 @@ MonoBehaviour:
   moveSpeed: 2
   minMoveDistance: 3
   maxMoveDistance: 8
-  spawnPadding: 5
+  spawnPadding: 7
   damageToPlayer: 1
   damageCooldown: 3
 --- !u!4 &340626627
@@ -1217,6 +1217,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1025380020}
   m_CullTransparentMesh: 1
+--- !u!1 &1285485413
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1285485415}
+  - component: {fileID: 1285485414}
+  m_Layer: 0
+  m_Name: DoorManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1285485414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1285485413}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9041290db4c9f8a4d8ed590f782d21de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  meshGenerator: {fileID: 1548962865}
+  doorMaterial: {fileID: 2100000, guid: 04a8bb327ad32934ba70910ecc5a5eb0, type: 2}
+  doorWidth: 1
+  doorHeight: 2
+  doorDepth: 0.5
+--- !u!4 &1285485415
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1285485413}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 50.39752, y: -9.336016, z: -0.5133064}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1548962864
 GameObject:
   m_ObjectHideFlags: 0
@@ -1330,18 +1379,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3324ad71e869f2147ab8fe6a2532077a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  obstacleMaterial: {fileID: 2100000, guid: 04a8bb327ad32934ba70910ecc5a5eb0, type: 2}
-  obstacles:
-  - name: 
-    position: {x: 0, y: 0, z: 0}
-    scale: {x: 0, y: 0, z: 0}
-    rotationZ: 0
-    isStatic: 0
-  - name: 
-    position: {x: 0, y: 0, z: 0}
-    scale: {x: 0, y: 0, z: 0}
-    rotationZ: 0
-    isStatic: 0
+  meshGenerator: {fileID: 1548962865}
+  lethalObstacleMaterial: {fileID: 2100000, guid: 8c09176124ee2794083017350c85651b, type: 2}
+  nonLethalObstacleMaterial: {fileID: 2100000, guid: 69fde2c9e60728b4ebfd299891d20449, type: 2}
+  obstacleCount: 10
+  obstacleWidth: 0.5
+  spawnPadding: 2
 --- !u!4 &2144055823
 Transform:
   m_ObjectHideFlags: 0
@@ -1370,3 +1413,4 @@ SceneRoots:
   - {fileID: 581908215}
   - {fileID: 340626627}
   - {fileID: 2144055823}
+  - {fileID: 1285485415}

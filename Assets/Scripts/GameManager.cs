@@ -139,7 +139,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void GameOver(string reason)
+    public void GameOver(string reason)
     {
         gameRunning = false;
         gameOverPanel.SetActive(true);
@@ -164,5 +164,19 @@ public class GameManager : MonoBehaviour
     public bool IsPlayerInvincible()
     {
         return isInvincible;
+    }
+    
+    public void WinGame()
+    {
+        gameRunning = false;
+        gameOverPanel.SetActive(true);
+        
+        TMP_Text gameOverText = gameOverPanel.GetComponentInChildren<TMP_Text>();
+        if (gameOverText != null)
+        {
+            gameOverText.text = "Game Won!";
+        }
+        
+        Time.timeScale = 0f; 
     }
 }

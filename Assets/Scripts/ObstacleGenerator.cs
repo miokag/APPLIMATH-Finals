@@ -7,15 +7,14 @@ public class ObstacleManager : MonoBehaviour
     public Material lethalObstacleMaterial;
     public Material nonLethalObstacleMaterial;
     public int obstacleCount = 10;
-    public float obstacleHeight = 1f;
-    public float obstacleSize = 0.5f;
+    public float obstacleWidth = 0.5f; // Only width needs to change
     public float spawnPadding = 2f;
 
     private Mesh obstacleMesh;
     private List<Matrix4x4> obstacleMatrices = new List<Matrix4x4>();
     private List<int> obstacleColliderIds = new List<int>();
     private List<bool> obstacleLethality = new List<bool>();
-    private List<bool> obstacleHitStatus = new List<bool>(); // Track if obstacle has been hit
+    private List<bool> obstacleHitStatus = new List<bool>();
 
     void Start()
     {
@@ -28,95 +27,75 @@ public class ObstacleManager : MonoBehaviour
 
     void CreateObstacleMesh()
     {
+        // Same cube as EnhancedMeshGenerator but with adjustable width
         obstacleMesh = new Mesh();
+        
+        float height = 1f; // Same as player
+        float depth = 1f;  // Same as player
         
         Vector3[] vertices = new Vector3[8]
         {
+            // Bottom face
             new Vector3(0, 0, 0),
-            new Vector3(obstacleSize, 0, 0),
-            new Vector3(obstacleSize, 0, obstacleSize),
-            new Vector3(0, 0, obstacleSize),
-            new Vector3(0, obstacleSize * 2, 0),
-            new Vector3(obstacleSize, obstacleSize * 2, 0),
-            new Vector3(obstacleSize, obstacleSize * 2, obstacleSize),
-            new Vector3(0, obstacleSize * 2, obstacleSize)
+            new Vector3(obstacleWidth, 0, 0),
+            new Vector3(obstacleWidth, 0, depth),
+            new Vector3(0, 0, depth),
+            // Top face
+            new Vector3(0, height, 0),
+            new Vector3(obstacleWidth, height, 0),
+            new Vector3(obstacleWidth, height, depth),
+            new Vector3(0, height, depth)
         };
         
         int[] triangles = new int[36]
         {
-            0, 4, 1, 1, 4, 5,
-            2, 6, 3, 3, 6, 7,
-            0, 3, 4, 4, 3, 7,
-            1, 5, 2, 2, 5, 6,
-            0, 1, 3, 3, 1, 2,
-            4, 7, 5, 5, 7, 6
+            0, 4, 1, 1, 4, 5, // Front
+            2, 6, 3, 3, 6, 7, // Back
+            0, 3, 4, 4, 3, 7, // Left
+            1, 5, 2, 2, 5, 6, // Right
+            0, 1, 3, 3, 1, 2, // Bottom
+            4, 7, 5, 5, 7, 6  // Top
         };
-        
-        Vector2[] uvs = new Vector2[8];
-        for (int i = 0; i < 8; i++)
-        {
-            uvs[i] = new Vector2(vertices[i].x / obstacleSize, vertices[i].z / obstacleSize);
-        }
 
         obstacleMesh.vertices = vertices;
         obstacleMesh.triangles = triangles;
-        obstacleMesh.uv = uvs;
         obstacleMesh.RecalculateNormals();
-        obstacleMesh.RecalculateBounds();
     }
 
     void SpawnObstacles()
     {
         float playerStartX = 0f;
+        float rightSideLength = meshGenerator.maxX - playerStartX;
+        float sectionLength = rightSideLength / obstacleCount;
 
         for (int i = 0; i < obstacleCount; i++)
         {
-            Vector3 position;
-            bool positionValid;
-            int attempts = 0;
-            const int maxAttempts = 50;
-
-            do
-            {
-                position = new Vector3(
-                    Random.Range(playerStartX + 5f, meshGenerator.maxX - spawnPadding),
-                    meshGenerator.groundY + obstacleHeight,
-                    meshGenerator.constantZPosition
-                );
-
-                positionValid = true;
-                
-                for (int j = 0; j < obstacleMatrices.Count; j++)
-                {
-                    Vector3 otherPos = obstacleMatrices[j].GetPosition();
-                    if (Vector3.Distance(position, otherPos) < spawnPadding * 2f)
-                    {
-                        positionValid = false;
-                        break;
-                    }
-                }
-
-                attempts++;
-                if (attempts >= maxAttempts) break;
-
-            } while (!positionValid && attempts < maxAttempts);
-
-            if (!positionValid) continue;
+            float sectionStart = playerStartX + (i * sectionLength);
+            float sectionEnd = sectionStart + sectionLength;
+            
+            Vector3 position = new Vector3(
+                Random.Range(sectionStart + spawnPadding, sectionEnd - spawnPadding),
+                meshGenerator.groundY + 0.5f, // Half of height (1 unit)
+                meshGenerator.constantZPosition
+            );
 
             bool isLethal = Random.value > 0.5f;
-            Quaternion rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
+            Quaternion rotation = Quaternion.identity; // No rotation
             Vector3 scale = Vector3.one;
 
+            // Collider matches visual size exactly
+            Vector3 colliderSize = new Vector3(obstacleWidth, 1f, 1f);
+            
             int id = CollisionManager.Instance.RegisterCollider(
                 position, 
-                new Vector3(obstacleSize, obstacleSize * 2, obstacleSize),
+                colliderSize,
                 false);
 
             Matrix4x4 obstacleMatrix = Matrix4x4.TRS(position, rotation, scale);
             obstacleMatrices.Add(obstacleMatrix);
             obstacleColliderIds.Add(id);
             obstacleLethality.Add(isLethal);
-            obstacleHitStatus.Add(false); // Initialize as not hit
+            obstacleHitStatus.Add(false);
 
             CollisionManager.Instance.UpdateMatrix(id, obstacleMatrix);
         }
@@ -131,30 +110,31 @@ public class ObstacleManager : MonoBehaviour
     void CheckPlayerCollision()
     {
         if (meshGenerator.GetPlayerID() == -1) return;
-        
+    
         var playerMatrix = CollisionManager.Instance.GetMatrix(meshGenerator.GetPlayerID());
         Vector3 playerPos = playerMatrix.GetPosition();
         Vector3 playerSize = meshGenerator.GetPlayerSize();
         float playerRadius = Mathf.Max(playerSize.x, playerSize.y, playerSize.z) * 0.5f;
-        
+    
         for (int i = 0; i < obstacleColliderIds.Count; i++)
         {
-            if (obstacleHitStatus[i]) continue; // Skip already hit obstacles
+            if (obstacleHitStatus[i]) continue;
 
             int obstacleId = obstacleColliderIds[i];
             var obstacleMatrix = CollisionManager.Instance.GetMatrix(obstacleId);
             Vector3 obstaclePos = obstacleMatrix.GetPosition();
-            
+        
             float dx = playerPos.x - obstaclePos.x;
             float dy = playerPos.y - obstaclePos.y;
             float dz = playerPos.z - obstaclePos.z;
             float sqrDistance = dx * dx + dy * dy + dz * dz;
-            
-            float combinedRadius = playerRadius + obstacleSize;
+        
+            // Changed obstacleSize to obstacleWidth here
+            float combinedRadius = playerRadius + obstacleWidth;
             if (sqrDistance < combinedRadius * combinedRadius)
             {
                 HandleObstacleEffect(obstacleLethality[i]);
-                obstacleHitStatus[i] = true; // Mark as hit but don't remove
+                obstacleHitStatus[i] = true;
             }
         }
     }
@@ -163,14 +143,9 @@ public class ObstacleManager : MonoBehaviour
     {
         if (GameManager.Instance == null) return;
 
-        if (isLethal)
+        if (isLethal & GameManager.Instance.IsPlayerInvincible() == false)
         {
-            Debug.Log("Hit lethal obstacle! Player dies.");
-            GameManager.Instance.TakeDamage(int.MaxValue);
-        }
-        else
-        {
-            Debug.Log("Hit non-lethal obstacle. No effect.");
+            GameManager.Instance.GameOver("Death By Obstacle");
         }
     }
 
@@ -189,21 +164,16 @@ public class ObstacleManager : MonoBehaviour
             Vector3 obstaclePos = obstacleMatrices[i].GetPosition();
             Vector3 viewportPos = mainCamera.WorldToViewportPoint(obstaclePos);
             
-            // Calculate dot product between camera forward and obstacle direction
             Vector3 cameraToObstacle = (obstaclePos - mainCamera.transform.position).normalized;
             float dot = Vector3.Dot(mainCamera.transform.forward, cameraToObstacle);
             
-            // Only render if in front of camera and within viewport bounds
             bool isVisible = dot > 0 && 
                            viewportPos.x > -0.5f && viewportPos.x < 1.5f && 
                            viewportPos.y > -0.5f && viewportPos.y < 1.5f &&
                            viewportPos.z > mainCamera.nearClipPlane;
 
-            // Get original rotation and position
             Vector3 position = obstacleMatrices[i].GetPosition();
             Quaternion rotation = obstacleMatrices[i].rotation;
-            
-            // Scale to zero if not visible, otherwise use normal scale
             Vector3 scale = isVisible ? Vector3.one : Vector3.zero;
             
             Matrix4x4 matrix = Matrix4x4.TRS(position, rotation, scale);
@@ -226,6 +196,7 @@ public class ObstacleManager : MonoBehaviour
         if (nonLethalObstacleMaterial != null && nonLethalMatrices.Count > 0)
         {
             RenderObstacleBatch(nonLethalMatrices, nonLethalObstacleMaterial);
+            RenderObstacleBatch(nonLethalMatrices, nonLethalObstacleMaterial);
         }
     }
 
@@ -247,24 +218,5 @@ public class ObstacleManager : MonoBehaviour
                 false
             );
         }
-    }
-
-    public void AddObstacle(bool isLethal, Vector3 position)
-    {
-        Quaternion rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
-        Vector3 scale = Vector3.one;
-
-        int id = CollisionManager.Instance.RegisterCollider(
-            position, 
-            new Vector3(obstacleSize, obstacleSize * 2, obstacleSize), 
-            false);
-
-        Matrix4x4 obstacleMatrix = Matrix4x4.TRS(position, rotation, scale);
-        obstacleMatrices.Add(obstacleMatrix);
-        obstacleColliderIds.Add(id);
-        obstacleLethality.Add(isLethal);
-        obstacleHitStatus.Add(false);
-
-        CollisionManager.Instance.UpdateMatrix(id, obstacleMatrix);
     }
 }

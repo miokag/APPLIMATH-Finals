@@ -65,56 +65,34 @@ public class PowerUpManager : MonoBehaviour
     void SpawnPowerUps()
     {
         float playerStartX = 0f;
-
+        float rightSideLength = meshGenerator.maxX - playerStartX;
+        float sectionLength = rightSideLength / powerUpCount;
+    
         for (int i = 0; i < powerUpCount; i++)
         {
-            Vector3 position;
-            bool positionValid;
-            int attempts = 0;
-            const int maxAttempts = 50;
-
-            do
-            {
-                position = new Vector3(
-                    Random.Range(playerStartX + 5f, meshGenerator.maxX - spawnPadding),
-                    meshGenerator.groundY + powerUpHeight,
-                    meshGenerator.constantZPosition
-                );
-
-                positionValid = true;
-                
-                // Check against other power-ups
-                for (int j = 0; j < powerUpMatrices.Count; j++)
-                {
-                    Vector3 otherPos = powerUpMatrices[j].GetPosition();
-                    if (Vector3.Distance(position, otherPos) < spawnPadding * 2f)
-                    {
-                        positionValid = false;
-                        break;
-                    }
-                }
-
-                attempts++;
-                if (attempts >= maxAttempts) break;
-
-            } while (!positionValid && attempts < maxAttempts);
-
-            if (!positionValid) continue;
-
+            float sectionStart = playerStartX + (i * sectionLength);
+            float sectionEnd = sectionStart + sectionLength;
+        
+            Vector3 position = new Vector3(
+                Random.Range(sectionStart + spawnPadding, sectionEnd - spawnPadding),
+                meshGenerator.groundY + powerUpHeight,
+                meshGenerator.constantZPosition
+            );
+    
             PowerUpType type = (PowerUpType)Random.Range(0, 3);
             Quaternion rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
             Vector3 scale = Vector3.one;
-
+    
             int id = CollisionManager.Instance.RegisterCollider(
                 position, 
                 new Vector3(powerUpSize, powerUpSize, powerUpSize), 
                 false);
-
+    
             Matrix4x4 powerUpMatrix = Matrix4x4.TRS(position, rotation, scale);
             powerUpMatrices.Add(powerUpMatrix);
             powerUpColliderIds.Add(id);
             powerUpTypes.Add(type);
-
+    
             CollisionManager.Instance.UpdateMatrix(id, powerUpMatrix);
         }
     }
