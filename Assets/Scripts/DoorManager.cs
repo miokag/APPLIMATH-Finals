@@ -155,8 +155,41 @@ public class DoorManager : MonoBehaviour
     {
         if (!doorSpawned) return;
 
+        UpdateDoorVisibility();
         CheckPlayerCollision();
         RenderDoor();
+    }
+    
+    void UpdateDoorVisibility()
+    {
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null) return;
+
+        Vector3 position = doorMatrix.GetColumn(3);
+        Vector3 viewportPos = mainCamera.WorldToViewportPoint(position);
+
+        bool isVisible = viewportPos.x >= -0.5f && viewportPos.x <= 1.5f && 
+                         viewportPos.y >= -0.5f && viewportPos.y <= 1.5f &&
+                         viewportPos.z > mainCamera.nearClipPlane;
+
+        // Get current rotation
+        Quaternion rotation = Quaternion.LookRotation(
+            doorMatrix.GetColumn(2),
+            doorMatrix.GetColumn(1));
+
+        // Set scale based on visibility
+        Vector3 newScale = isVisible ? Vector3.one : Vector3.zero;
+        doorMatrix = Matrix4x4.TRS(position, rotation, newScale);
+
+        // Update collider only when visible
+        if (isVisible)
+        {
+            CollisionManager.Instance.UpdateCollider(
+                doorColliderId, 
+                position, 
+                new Vector3(doorSize, doorSize, doorSize));
+        }
+        CollisionManager.Instance.UpdateMatrix(doorColliderId, doorMatrix);
     }
 
     void CheckPlayerCollision()
