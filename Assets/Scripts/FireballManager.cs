@@ -21,6 +21,7 @@ public class FireballManager : MonoBehaviour
     void Start()
     {
         if (fireballMaterial != null) fireballMaterial.enableInstancing = true;
+        meshGenerator = FindObjectOfType<EnhancedMeshGenerator>();
         CreateFireballMesh();
     }
 

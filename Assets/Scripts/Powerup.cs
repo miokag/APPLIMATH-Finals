@@ -30,6 +30,7 @@ public class PowerUpManager : MonoBehaviour
         if (healthPowerUpMaterial != null) healthPowerUpMaterial.enableInstancing = true;
         if (invincibilityPowerUpMaterial != null) invincibilityPowerUpMaterial.enableInstancing = true;
         if (fireballPowerUpMaterial != null) fireballPowerUpMaterial.enableInstancing = true;
+        meshGenerator = FindObjectOfType<EnhancedMeshGenerator>();
 
         CreatePowerUpMeshes();
         SpawnPowerUps();
@@ -55,34 +56,66 @@ public class PowerUpManager : MonoBehaviour
         float playerStartX = 0f;
         float rightSideLength = meshGenerator.maxX - playerStartX;
         float sectionLength = rightSideLength / powerUpCount;
-    
+        
+        // Get reference to ObstacleManager
+        ObstacleManager obstacleManager = FindObjectOfType<ObstacleManager>();
+        if (obstacleManager == null)
+        {
+            Debug.LogError("ObstacleManager not found!");
+            return;
+        }
+
+        int maxAttempts = 10; // Maximum attempts to find a clear position
+        int powerupsSpawned = 0;
+        
         for (int i = 0; i < powerUpCount; i++)
         {
             float sectionStart = playerStartX + (i * sectionLength);
             float sectionEnd = sectionStart + sectionLength;
-        
-            Vector3 position = new Vector3(
-                Random.Range(sectionStart + spawnPadding, sectionEnd - spawnPadding),
-                meshGenerator.groundY + powerUpHeight,
-                meshGenerator.constantZPosition
-            );
-    
+            
+            Vector3 position = Vector3.zero;
+            bool positionFound = false;
+            int attempts = 0;
+            
+            // Try to find a clear position
+            while (!positionFound && attempts < maxAttempts)
+            {
+                attempts++;
+                
+                position = new Vector3(
+                    Random.Range(sectionStart + spawnPadding, sectionEnd - spawnPadding),
+                    meshGenerator.groundY + powerUpHeight,
+                    meshGenerator.constantZPosition
+                );
+                
+                // Check if position is clear of obstacles
+                if (obstacleManager.IsPositionClear(position, powerUpSize * 1.5f))
+                {
+                    positionFound = true;
+                }
+            }
+            
+            if (!positionFound) continue; // Skip if we couldn't find a clear spot
+            
             PowerUpType type = (PowerUpType)Random.Range(0, 3);
             Quaternion rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
             Vector3 scale = Vector3.one;
-    
+
             int id = CollisionManager.Instance.RegisterCollider(
                 position, 
                 new Vector3(powerUpSize, powerUpSize, powerUpSize), 
                 false);
-    
+
             Matrix4x4 powerUpMatrix = Matrix4x4.TRS(position, rotation, scale);
             powerUpMatrices.Add(powerUpMatrix);
             powerUpColliderIds.Add(id);
             powerUpTypes.Add(type);
-    
+
             CollisionManager.Instance.UpdateMatrix(id, powerUpMatrix);
+            powerupsSpawned++;
         }
+        
+        Debug.Log($"Spawned {powerupsSpawned} powerups (attempted {powerUpCount})");
     }
 
     void Update()
@@ -232,4 +265,6 @@ public class PowerUpManager : MonoBehaviour
             );
         }
     }
+    
+    
 }

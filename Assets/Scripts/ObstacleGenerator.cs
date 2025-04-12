@@ -11,8 +11,8 @@ public class ObstacleManager : MonoBehaviour
     public float spawnPadding = 2f;
 
     [Header("Height Settings")]
-    public float minHeight = 1f;  // Minimum height above ground
-    public float maxHeight = 5f;  // Maximum height above ground
+    public float minHeight = 1f; 
+    public float maxHeight = 5f; 
 
     [Header("Collision Settings")] 
     public float collisionDetectionPadding = 0.1f;
@@ -26,6 +26,7 @@ public class ObstacleManager : MonoBehaviour
     {
         if (harmlessMaterial != null) harmlessMaterial.enableInstancing = true;
         if (deadlyMaterial != null) deadlyMaterial.enableInstancing = true;
+        meshGenerator = FindObjectOfType<EnhancedMeshGenerator>();
 
         CreateObstacleMesh();
         SpawnObstacles();
@@ -266,5 +267,23 @@ public class ObstacleManager : MonoBehaviour
         return (aMaxX >= bMinX && aMinX <= bMaxX) &&
                (aMaxY >= bMinY && aMinY <= bMaxY) &&
                (aMaxZ >= bMinZ && aMinZ <= bMaxZ);
+    }
+    
+    public bool IsPositionClear(Vector3 position, float radius)
+    {
+        foreach (var matrix in obstacleMatrices)
+        {
+            Vector3 obstaclePos = matrix.GetColumn(3);
+            float dx = position.x - obstaclePos.x;
+            float dy = position.y - obstaclePos.y;
+            float dz = position.z - obstaclePos.z;
+            float sqrDistance = dx * dx + dy * dy + dz * dz;
+        
+            if (sqrDistance < (obstacleSize + radius) * (obstacleSize + radius))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

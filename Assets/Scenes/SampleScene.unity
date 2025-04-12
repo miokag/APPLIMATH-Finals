@@ -397,7 +397,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &340626626
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1322,7 +1322,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1642d83f5e22434da96590f2ba04f52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshGenerator: {fileID: 1548962865}
+  meshGenerator: {fileID: 0}
   healthPowerUpMaterial: {fileID: 2100000, guid: 18fc45b117ddeb6429297a9b25cc577b, type: 2}
   invincibilityPowerUpMaterial: {fileID: 2100000, guid: 69fde2c9e60728b4ebfd299891d20449, type: 2}
   fireballPowerUpMaterial: {fileID: 2100000, guid: 8c09176124ee2794083017350c85651b, type: 2}
@@ -1358,7 +1358,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ddb0107a93cb4d439b5d857d12310ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshGenerator: {fileID: 1548962865}
+  meshGenerator: {fileID: 0}
   fireballMaterial: {fileID: 2100000, guid: 8c09176124ee2794083017350c85651b, type: 2}
   fireballSpeed: 10
   fireballSize: 0.5
@@ -1456,7 +1456,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3324ad71e869f2147ab8fe6a2532077a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshGenerator: {fileID: 1548962865}
+  meshGenerator: {fileID: 0}
   harmlessMaterial: {fileID: 2100000, guid: 04a8bb327ad32934ba70910ecc5a5eb0, type: 2}
   deadlyMaterial: {fileID: 2100000, guid: a7ea70324b3878a40973fc1fa0f1464d, type: 2}
   obstacleCount: 10
