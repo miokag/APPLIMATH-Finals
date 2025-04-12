@@ -1239,7 +1239,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1285485414
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1252,31 +1252,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9041290db4c9f8a4d8ed590f782d21de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshGenerator: {fileID: 1548962865}
-  doorMaterial: {fileID: 2100000, guid: 04a8bb327ad32934ba70910ecc5a5eb0, type: 2}
+  meshGenerator: {fileID: 0}
+  doorMaterial: {fileID: 2100000, guid: 47d893505da512a48a916d389f2fbc88, type: 2}
   doorWidth: 1
   doorHeight: 2
   doorDepth: 0.5
-  minClearRadius: 5
-  doorMesh: {fileID: 0}
-  doorMatrix:
-    e00: 0
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 0
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 0
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 0
-  doorColliderId: 0
+  spawnDistanceFromLastObject: 5
 --- !u!4 &1285485415
 Transform:
   m_ObjectHideFlags: 0
@@ -1464,7 +1445,7 @@ MonoBehaviour:
   spawnPadding: 2
   minHeight: 0.3
   maxHeight: 0.7
-  collisionDetectionPadding: 0.05
+  collisionDetectionPadding: 0.03
 --- !u!4 &2144055823
 Transform:
   m_ObjectHideFlags: 0

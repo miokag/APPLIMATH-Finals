@@ -17,7 +17,7 @@ public class EnemyManager : MonoBehaviour
     public float spawnHeight = 1f;
 
     private Mesh enemyMesh;
-    private List<Matrix4x4> enemyMatrices = new List<Matrix4x4>();
+    internal List<Matrix4x4> enemyMatrices = new List<Matrix4x4>();
     private List<int> enemyColliderIds = new List<int>();
     private List<float> enemyMovementDirections = new List<float>();
     private List<float> enemySpawnPositionsX = new List<float>();
@@ -34,8 +34,8 @@ public class EnemyManager : MonoBehaviour
     private bool canDamage = true;
     
     [Header("Spawn Settings")]
-    public float minSpawnDistanceFromPlayer = 10f; // Minimum distance from player to spawn
-    public float enemySpacing = 3f; // Space between enemies
+    public float minSpawnDistanceFromPlayer = 10f;
+    public float enemySpacing = 3f; 
     
     void Awake()
     {

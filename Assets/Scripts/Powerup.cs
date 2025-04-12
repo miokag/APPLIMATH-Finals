@@ -14,7 +14,7 @@ public class PowerUpManager : MonoBehaviour
     public FireballManager fireballManager;
 
     private Mesh triangleMesh;
-    private List<Matrix4x4> powerUpMatrices = new List<Matrix4x4>();
+    internal List<Matrix4x4> powerUpMatrices = new List<Matrix4x4>();
     private List<int> powerUpColliderIds = new List<int>();
     private List<PowerUpType> powerUpTypes = new List<PowerUpType>();
 

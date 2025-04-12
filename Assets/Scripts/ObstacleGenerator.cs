@@ -18,7 +18,7 @@ public class ObstacleManager : MonoBehaviour
     public float collisionDetectionPadding = 0.1f;
 
     private Mesh obstacleMesh;
-    private List<Matrix4x4> obstacleMatrices = new List<Matrix4x4>();
+    internal List<Matrix4x4> obstacleMatrices = new List<Matrix4x4>();
     private List<int> obstacleColliderIds = new List<int>();
     private List<bool> isDeadlyList = new List<bool>();
 
