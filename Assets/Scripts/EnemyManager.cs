@@ -234,18 +234,4 @@ public class EnemyManager : MonoBehaviour
             );
         }
     }
-
-    public void DestroyEnemy(int colliderId)
-    {
-        int index = enemyColliderIds.IndexOf(colliderId);
-        if (index >= 0)
-        {
-            CollisionManager.Instance.RemoveCollider(colliderId);
-            enemyMatrices.RemoveAt(index);
-            enemyColliderIds.RemoveAt(index);
-            moveDirections.RemoveAt(index);
-            moveDistances.RemoveAt(index);
-            startPositions.RemoveAt(index);
-        }
-    }
 }

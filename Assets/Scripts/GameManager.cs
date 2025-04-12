@@ -85,15 +85,16 @@ public class GameManager : MonoBehaviour
             Debug.Log("Damage blocked by invincibility!");
             return;
         }
-
-        currentHealth -= damage;
-        Debug.Log($"Player took {damage} damage! Health: {currentHealth}/{maxHealth}");
-        UpdateHealthUI();
-
         if (currentHealth <= 0)
         {
             Debug.Log("Player died!");
             GameOver("You died!");
+        }
+        else
+        {
+            currentHealth -= damage;
+            Debug.Log($"Player took {damage} damage! Health: {currentHealth}/{maxHealth}");
+            UpdateHealthUI();
         }
     }
 

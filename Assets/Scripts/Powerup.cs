@@ -13,7 +13,6 @@ public class PowerUpManager : MonoBehaviour
     public float spawnPadding = 2f; // Added spawn padding
 
     private Mesh triangleMesh;
-    private Mesh quadMesh;
     private List<Matrix4x4> powerUpMatrices = new List<Matrix4x4>();
     private List<int> powerUpColliderIds = new List<int>();
     private List<PowerUpType> powerUpTypes = new List<PowerUpType>();
@@ -48,18 +47,6 @@ public class PowerUpManager : MonoBehaviour
         triangleMesh.vertices = triangleVertices;
         triangleMesh.triangles = new int[12] { 0, 2, 1, 0, 1, 3, 1, 2, 3, 2, 0, 3 };
         triangleMesh.RecalculateNormals();
-
-        quadMesh = new Mesh();
-        Vector3[] quadVertices = new Vector3[4]
-        {
-            new Vector3(0, 0, 0),
-            new Vector3(powerUpSize, 0, 0),
-            new Vector3(0, powerUpSize, 0),
-            new Vector3(powerUpSize, powerUpSize, 0)
-        };
-        quadMesh.vertices = quadVertices;
-        quadMesh.triangles = new int[6] { 0, 2, 1, 1, 2, 3 };
-        quadMesh.RecalculateNormals();
     }
 
     void SpawnPowerUps()
@@ -204,10 +191,10 @@ public class PowerUpManager : MonoBehaviour
             RenderPowerUpBatch(triangleMesh, healthPowerUpMaterial, healthMatrices);
         }
 
-        // Render invincibility power-ups (quad)
+        // Render invincibility power-ups (triangle)
         if (invincibilityPowerUpMaterial != null && invincibilityMatrices.Count > 0)
         {
-            RenderPowerUpBatch(quadMesh, invincibilityPowerUpMaterial, invincibilityMatrices);
+            RenderPowerUpBatch(triangleMesh, invincibilityPowerUpMaterial, invincibilityMatrices);
         }
 
         // Render fireball power-ups (triangle)

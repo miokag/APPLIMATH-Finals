@@ -393,4 +393,5 @@ public class EnhancedMeshGenerator : MonoBehaviour
         
         CollisionManager.Instance.UpdateMatrix(id, boxMatrix);
     }
+    
 }
