@@ -29,6 +29,7 @@ public class GameManager : MonoBehaviour
 
     // Power-up references
     private PowerUpManager powerUpManager;
+    private int fireballCount = 0;
     
     
 
@@ -194,4 +195,23 @@ public class GameManager : MonoBehaviour
         
         Time.timeScale = 0f; 
     }
+    
+    public void AddFireball()
+    {
+        fireballCount++;
+    }
+    
+    public void UseFireball()
+    {
+        if (fireballCount > 0)
+        {
+            fireballCount--;
+        }
+    }
+    
+    public bool HasFireballs()
+    {
+        return fireballCount > 0;
+    }
+
 }

@@ -10,7 +10,8 @@ public class PowerUpManager : MonoBehaviour
     public int powerUpCount = 10;
     public float powerUpHeight = 1f;
     public float powerUpSize = 0.5f;
-    public float spawnPadding = 2f; // Added spawn padding
+    public float spawnPadding = 2f;
+    public FireballManager fireballManager;
 
     private Mesh triangleMesh;
     private List<Matrix4x4> powerUpMatrices = new List<Matrix4x4>();
@@ -131,20 +132,28 @@ public class PowerUpManager : MonoBehaviour
         switch (type)
         {
             case PowerUpType.Health:
-                Debug.Log("Health power-up collected! Extra life gained.");
                 GameManager.Instance.HealPlayer(1);
                 break;
             
             case PowerUpType.Invincibility:
-                Debug.Log("Invincibility power-up collected! Enemies will die on contact.");
                 GameManager.Instance.ActivateInvincibility();
                 break;
             
             case PowerUpType.Fireball:
-                Debug.Log("Fireball power-up collected! You can now shoot fireballs!");
-                // Implement fireball shooting logic here
+                ActivateFireball();
                 break;
         }
+    }
+    
+    void ActivateFireball()
+    {
+        if (fireballManager == null || meshGenerator == null) return;
+        
+        int playerId = meshGenerator.GetPlayerID();
+        Vector3 playerPos = CollisionManager.Instance.GetMatrix(playerId).GetColumn(3);
+        Vector3 fireDirection = Vector3.right;
+        
+        fireballManager.SpawnFireball(playerPos + Vector3.right, fireDirection);
     }
 
     void RenderPowerUps()

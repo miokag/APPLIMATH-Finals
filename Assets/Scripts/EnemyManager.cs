@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class EnemyManager : MonoBehaviour
 {
+    public static EnemyManager Instance { get; private set; }
+    
     [Header("Enemy Settings")]
     public int enemyCount = 10;
     public Material enemyMaterial;
@@ -35,7 +37,18 @@ public class EnemyManager : MonoBehaviour
     public float minSpawnDistanceFromPlayer = 10f; // Minimum distance from player to spawn
     public float enemySpacing = 3f; // Space between enemies
     
-
+    void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+    
     void Start()
     {
         meshGenerator = FindObjectOfType<EnhancedMeshGenerator>();
@@ -244,7 +257,7 @@ public class EnemyManager : MonoBehaviour
     Vector3 expandedPlayerSize = playerBounds.Size + new Vector3(collisionDetectionPadding, collisionDetectionPadding, 0);
     AABBBounds expandedPlayerBounds = new AABBBounds(playerBounds.Center, expandedPlayerSize, -1);
     
-    for (int i = 0; i < enemyMatrices.Count; i++)
+    for (int i = enemyMatrices.Count - 1; i >= 0; i--)
     {
         // Get enemy position and size
         Vector3 position = enemyMatrices[i].GetColumn(3);
@@ -262,6 +275,14 @@ public class EnemyManager : MonoBehaviour
         
         if (BoundsIntersect(expandedPlayerBounds, enemyBounds))
         {
+            if (GameManager.Instance.IsPlayerInvincible())
+            {
+                // Player is invincible - destroy enemy immediately
+                DestroyEnemy(i);
+                continue; // Skip the rest of the collision handling for this enemy
+            }
+            
+            // Normal collision handling (your original logic)
             // Calculate penetration depth and direction
             float penetrationX = Mathf.Min(
                 enemyBounds.Max.x - playerBounds.Min.x,
@@ -372,4 +393,31 @@ public class EnemyManager : MonoBehaviour
             Graphics.DrawMeshInstanced(enemyMesh, 0, enemyMaterial, batchMatrices, batchSize);
         }
     }
+    
+    public bool CheckFireballCollision(Vector3 fireballPos, float fireballRadius)
+    {
+        for (int i = enemyColliderIds.Count - 1; i >= 0; i--)
+        {
+            Vector3 enemyPos = enemyMatrices[i].GetColumn(3);
+            float distance = Vector3.Distance(fireballPos, enemyPos);
+            float enemyRadius = Mathf.Max(enemyWidth, enemyHeight, enemyDepth) * 0.5f;
+            
+            if (distance < enemyRadius + fireballRadius)
+            {
+                DestroyEnemy(i);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public void DestroyEnemy(int index)
+    {
+        CollisionManager.Instance.RemoveCollider(enemyColliderIds[index]);
+        enemyMatrices.RemoveAt(index);
+        enemyColliderIds.RemoveAt(index);
+        enemyMovementDirections.RemoveAt(index);
+        enemySpawnPositionsX.RemoveAt(index);
+    }
+    
 }
