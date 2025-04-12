@@ -3,25 +3,30 @@ using UnityEngine;
 
 public class ObstacleManager : MonoBehaviour
 {
-    public Material nonLethalMaterial;
-    public Material lethalMaterial;
+    public EnhancedMeshGenerator meshGenerator;
+    public Material harmlessMaterial;
+    public Material deadlyMaterial;
     public int obstacleCount = 10;
     public float obstacleSize = 1f;
     public float spawnPadding = 2f;
-    [Range(0f, 1f)] public float lethalProbability = 0.3f;
+
+    [Header("Height Settings")]
+    public float minHeight = 1f;  // Minimum height above ground
+    public float maxHeight = 5f;  // Maximum height above ground
+
+    [Header("Collision Settings")] 
+    public float collisionDetectionPadding = 0.1f;
 
     private Mesh obstacleMesh;
     private List<Matrix4x4> obstacleMatrices = new List<Matrix4x4>();
     private List<int> obstacleColliderIds = new List<int>();
-    private List<bool> isLethalList = new List<bool>();
-    private EnhancedMeshGenerator meshGen;
+    private List<bool> isDeadlyList = new List<bool>();
 
     void Start()
     {
-        if (nonLethalMaterial != null) nonLethalMaterial.enableInstancing = true;
-        if (lethalMaterial != null) lethalMaterial.enableInstancing = true;
+        if (harmlessMaterial != null) harmlessMaterial.enableInstancing = true;
+        if (deadlyMaterial != null) deadlyMaterial.enableInstancing = true;
 
-        meshGen = FindObjectOfType<EnhancedMeshGenerator>();
         CreateObstacleMesh();
         SpawnObstacles();
     }
@@ -29,7 +34,6 @@ public class ObstacleManager : MonoBehaviour
     void CreateObstacleMesh()
     {
         obstacleMesh = new Mesh();
-        
         Vector3[] vertices = new Vector3[8]
         {
             new Vector3(0, 0, 0),
@@ -41,17 +45,34 @@ public class ObstacleManager : MonoBehaviour
             new Vector3(obstacleSize, obstacleSize, obstacleSize),
             new Vector3(0, obstacleSize, obstacleSize)
         };
-        
+
         int[] triangles = new int[36]
         {
-            0, 4, 1, 1, 4, 5,
-            2, 6, 3, 3, 6, 7,
-            0, 3, 4, 4, 3, 7,
-            1, 5, 2, 2, 5, 6,
-            0, 1, 3, 3, 1, 2,
-            4, 7, 5, 5, 7, 6
-        };
+            // Bottom face
+            0, 1, 2,
+            0, 2, 3,
         
+            // Top face
+            4, 6, 5,
+            4, 7, 6,
+        
+            // Front face
+            0, 5, 1,
+            0, 4, 5,
+        
+            // Right face
+            1, 5, 6,
+            1, 6, 2,
+        
+            // Back face
+            2, 6, 7,
+            2, 7, 3,
+        
+            // Left face
+            3, 7, 4,
+            3, 4, 0
+        };
+
         obstacleMesh.vertices = vertices;
         obstacleMesh.triangles = triangles;
         obstacleMesh.RecalculateNormals();
@@ -60,29 +81,30 @@ public class ObstacleManager : MonoBehaviour
 
     void SpawnObstacles()
     {
-        if (meshGen == null) return;
-
+        float zPos = meshGenerator.constantZPosition;
         float playerStartX = 0f;
-        float rightSideLength = meshGen.maxX - playerStartX;
+        float rightSideLength = meshGenerator.maxX - playerStartX;
         float sectionLength = rightSideLength / obstacleCount;
-    
+
         for (int i = 0; i < obstacleCount; i++)
         {
             float sectionStart = playerStartX + (i * sectionLength);
             float sectionEnd = sectionStart + sectionLength;
-        
+
+            // Random height between min and max
+            float randomHeight = Random.Range(minHeight, maxHeight);
+            
             Vector3 position = new Vector3(
                 Random.Range(sectionStart + spawnPadding, sectionEnd - spawnPadding),
-                meshGen.groundY + obstacleSize * 0.5f, // Half height to sit on ground
-                meshGen.constantZPosition
+                meshGenerator.groundY + randomHeight, // Use random height
+                zPos
             );
 
-            Quaternion rotation = Quaternion.identity;
-            Vector3 scale = Vector3.one * obstacleSize;
+            bool isDeadly = Random.value < 0.3f;
+            isDeadlyList.Add(isDeadly);
 
-            // Determine if this is a lethal obstacle
-            bool isLethal = Random.value <= lethalProbability;
-            isLethalList.Add(isLethal);
+            Quaternion rotation = Quaternion.identity;
+            Vector3 scale = Vector3.one;
 
             int id = CollisionManager.Instance.RegisterCollider(
                 position,
@@ -99,43 +121,44 @@ public class ObstacleManager : MonoBehaviour
 
     void Update()
     {
-        CheckPlayerCollisions();
+        CheckPlayerCollision();
         RenderObstacles();
     }
 
-    void CheckPlayerCollisions()
+    void CheckPlayerCollision()
     {
-        if (GameManager.Instance == null || GameManager.Instance.IsPlayerInvincible()) return;
-        if (meshGen == null || meshGen.GetPlayerID() == -1) return;
+        int playerId = meshGenerator.GetPlayerID();
+        if (playerId == -1) return;
 
-        var playerMatrix = CollisionManager.Instance.GetMatrix(meshGen.GetPlayerID());
-        Vector3 playerPos = playerMatrix.GetPosition();
-        Vector3 playerSize = meshGen.GetPlayerSize();
-        float playerRadius = Mathf.Max(playerSize.x, playerSize.y, playerSize.z) * 0.5f;
+        AABBBounds playerBounds = GetColliderBounds(playerId);
+        if (playerBounds == null) return;
+
+        Vector3 expandedPlayerSize = playerBounds.Size + new Vector3(collisionDetectionPadding, collisionDetectionPadding, 0);
+        AABBBounds expandedPlayerBounds = new AABBBounds(playerBounds.Center, expandedPlayerSize, -1);
 
         for (int i = 0; i < obstacleMatrices.Count; i++)
         {
-            Vector3 obstaclePos = obstacleMatrices[i].GetPosition();
-            
-            float dx = playerPos.x - obstaclePos.x;
-            float dy = playerPos.y - obstaclePos.y;
-            float dz = playerPos.z - obstaclePos.z;
-            float sqrDistance = dx * dx + dy * dy + dz * dz;
-            
-            float combinedRadius = playerRadius + obstacleSize;
-            if (sqrDistance < combinedRadius * combinedRadius)
+            Vector3 position = obstacleMatrices[i].GetColumn(3);
+            Vector3 scale = new Vector3(
+                obstacleMatrices[i].GetColumn(0).magnitude,
+                obstacleMatrices[i].GetColumn(1).magnitude,
+                obstacleMatrices[i].GetColumn(2).magnitude);
+
+            Vector3 obstacleSize = new Vector3(
+                this.obstacleSize * scale.x + collisionDetectionPadding,
+                this.obstacleSize * scale.y + collisionDetectionPadding,
+                this.obstacleSize * scale.z);
+
+            AABBBounds obstacleBounds = new AABBBounds(position, obstacleSize, -1);
+
+            if (BoundsIntersect(expandedPlayerBounds, obstacleBounds))
             {
-                Debug.Log("Collision detected with obstacle");
-                if (isLethalList[i])
+                if (isDeadlyList[i])
                 {
-                    Debug.Log("Lethal obstacle hit!");
-                    GameManager.Instance.TakeDamage(GameManager.Instance.CurrentHealth); // Instant death
+                    // Deadly obstacle - instant kill
+                    GameManager.Instance?.TakeDamage(GameManager.Instance.CurrentHealth);
                 }
-                else
-                {
-                    Debug.Log("Non-lethal obstacle hit");
-                    // Collision response is handled by EnhancedMeshGenerator's movement code
-                }
+                // Harmless obstacles do nothing
             }
         }
     }
@@ -147,81 +170,101 @@ public class ObstacleManager : MonoBehaviour
         Camera mainCamera = Camera.main;
         if (mainCamera == null) return;
 
-        // Separate lists for lethal and non-lethal obstacles
-        List<Matrix4x4> visibleNonLethal = new List<Matrix4x4>();
-        List<Matrix4x4> visibleLethal = new List<Matrix4x4>();
+        // Separate matrices by type
+        List<Matrix4x4> harmlessMatrices = new List<Matrix4x4>();
+        List<Matrix4x4> deadlyMatrices = new List<Matrix4x4>();
 
         for (int i = 0; i < obstacleMatrices.Count; i++)
         {
-            Vector3 obstaclePos = obstacleMatrices[i].GetPosition();
+            Vector3 obstaclePos = obstacleMatrices[i].GetColumn(3);
             Vector3 viewportPos = mainCamera.WorldToViewportPoint(obstaclePos);
-            
-            bool isVisible = viewportPos.x > -0.5f && viewportPos.x < 1.5f && 
-                            viewportPos.y > -0.5f && viewportPos.y < 1.5f &&
-                            viewportPos.z > mainCamera.nearClipPlane;
 
-            Matrix4x4 matrixToRender;
-            if (isVisible)
+            bool isVisible = viewportPos.x > -0.5f && viewportPos.x < 1.5f &&
+                           viewportPos.y > -0.5f && viewportPos.y < 1.5f &&
+                           viewportPos.z > mainCamera.nearClipPlane;
+
+            Matrix4x4 matrix = isVisible ? obstacleMatrices[i] :
+                Matrix4x4.TRS(obstaclePos, obstacleMatrices[i].rotation, Vector3.zero);
+
+            if (isDeadlyList[i])
             {
-                matrixToRender = obstacleMatrices[i];
+                deadlyMatrices.Add(matrix);
             }
             else
             {
-                matrixToRender = Matrix4x4.TRS(
-                    obstaclePos,
-                    obstacleMatrices[i].rotation,
-                    Vector3.zero
-                );
-            }
-
-            if (isLethalList[i])
-            {
-                visibleLethal.Add(matrixToRender);
-            }
-            else
-            {
-                visibleNonLethal.Add(matrixToRender);
+                harmlessMatrices.Add(matrix);
             }
         }
 
-        // Render non-lethal obstacles
-        if (nonLethalMaterial != null && visibleNonLethal.Count > 0)
+        // Render harmless obstacles
+        if (harmlessMaterial != null && harmlessMatrices.Count > 0)
         {
-            Matrix4x4[] nonLethalArray = visibleNonLethal.ToArray();
-            for (int i = 0; i < nonLethalArray.Length; i += 1023)
-            {
-                int batchSize = Mathf.Min(1023, nonLethalArray.Length - i);
-                Graphics.DrawMeshInstanced(
-                    obstacleMesh,
-                    0,
-                    nonLethalMaterial,
-                    nonLethalArray,
-                    batchSize,
-                    null,
-                    UnityEngine.Rendering.ShadowCastingMode.Off,
-                    false
-                );
-            }
+            RenderObstacleBatch(obstacleMesh, harmlessMaterial, harmlessMatrices);
         }
 
-        // Render lethal obstacles
-        if (lethalMaterial != null && visibleLethal.Count > 0)
+        // Render deadly obstacles
+        if (deadlyMaterial != null && deadlyMatrices.Count > 0)
         {
-            Matrix4x4[] lethalArray = visibleLethal.ToArray();
-            for (int i = 0; i < lethalArray.Length; i += 1023)
-            {
-                int batchSize = Mathf.Min(1023, lethalArray.Length - i);
-                Graphics.DrawMeshInstanced(
-                    obstacleMesh,
-                    0,
-                    lethalMaterial,
-                    lethalArray,
-                    batchSize,
-                    null,
-                    UnityEngine.Rendering.ShadowCastingMode.Off,
-                    false
-                );
-            }
+            RenderObstacleBatch(obstacleMesh, deadlyMaterial, deadlyMatrices);
         }
+    }
+
+    void RenderObstacleBatch(Mesh mesh, Material material, List<Matrix4x4> matrices)
+    {
+        Matrix4x4[] matrixArray = matrices.ToArray();
+
+        for (int i = 0; i < matrixArray.Length; i += 1023)
+        {
+            int batchSize = Mathf.Min(1023, matrixArray.Length - i);
+            Graphics.DrawMeshInstanced(
+                mesh,
+                0,
+                material,
+                matrixArray,
+                batchSize,
+                null,
+                UnityEngine.Rendering.ShadowCastingMode.Off,
+                false
+            );
+        }
+    }
+
+    AABBBounds GetColliderBounds(int id)
+    {
+        if (CollisionManager.Instance == null) return null;
+
+        Matrix4x4 matrix = CollisionManager.Instance.GetMatrix(id);
+        if (matrix == Matrix4x4.identity) return null;
+
+        Vector3 position = matrix.GetColumn(3);
+        Vector3 scale = new Vector3(
+            matrix.GetColumn(0).magnitude,
+            matrix.GetColumn(1).magnitude,
+            matrix.GetColumn(2).magnitude);
+
+        Vector3 size = new Vector3(obstacleSize * scale.x, obstacleSize * scale.y, obstacleSize * scale.z);
+
+        return new AABBBounds(position, size, id);
+    }
+
+    bool BoundsIntersect(AABBBounds a, AABBBounds b)
+    {
+        float aMinX = a.Center.x - (a.Size.x * 0.5f);
+        float aMaxX = a.Center.x + (a.Size.x * 0.5f);
+        float aMinY = a.Center.y - (a.Size.y * 0.5f);
+        float aMaxY = a.Center.y + (a.Size.y * 0.5f);
+        float aMinZ = a.Center.z - (a.Size.z * 0.5f);
+        float aMaxZ = a.Center.z + (a.Size.z * 0.5f);
+
+        float bMinX = b.Center.x - (b.Size.x * 0.5f);
+        float bMaxX = b.Center.x + (b.Size.x * 0.5f);
+        float bMinY = b.Center.y - (b.Size.y * 0.5f);
+        float bMaxY = b.Center.y + (b.Size.y * 0.5f);
+        float bMinZ = b.Center.z - (b.Size.z * 0.5f);
+        float bMaxZ = b.Center.z + (b.Size.z * 0.5f);
+
+        return (aMaxX >= bMinX && aMinX <= bMaxX) &&
+               (aMaxY >= bMinY && aMinY <= bMaxY) &&
+               (aMaxZ >= bMinZ && aMinZ <= bMaxZ);
     }
 }
