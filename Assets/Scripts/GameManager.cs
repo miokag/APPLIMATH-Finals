@@ -85,16 +85,15 @@ public class GameManager : MonoBehaviour
             Debug.Log("Damage blocked by invincibility!");
             return;
         }
+
+        currentHealth -= damage;
+        Debug.Log($"Player took {damage} damage! Health: {currentHealth}/{maxHealth}");
+        UpdateHealthUI();
+    
         if (currentHealth <= 0)
         {
             Debug.Log("Player died!");
             GameOver("You died!");
-        }
-        else
-        {
-            currentHealth -= damage;
-            Debug.Log($"Player took {damage} damage! Health: {currentHealth}/{maxHealth}");
-            UpdateHealthUI();
         }
     }
 
@@ -110,22 +109,37 @@ public class GameManager : MonoBehaviour
         {
             StartCoroutine(InvincibilityRoutine());
         }
+        else
+        {
+            // Reset timer if already invincible
+            StopAllCoroutines();
+            StartCoroutine(InvincibilityRoutine());
+        }
     }
 
     IEnumerator InvincibilityRoutine()
     {
         isInvincible = true;
-        yield return new WaitForSeconds(invincibilityDuration);
+        UpdateHealthUI(); // Update UI immediately
+    
+        float timer = invincibilityDuration;
+        while (timer > 0)
+        {
+            // Flash effect could be added here
+            timer -= Time.deltaTime;
+            yield return null;
+        }
+    
         isInvincible = false;
+        UpdateHealthUI();
     }
+
 
     void UpdateHealthUI()
     {
         if (healthText != null)
         {
             healthText.text = $"HP: {currentHealth}/{maxHealth}";
-            
-            // Visual feedback when invincible
             healthText.color = isInvincible ? Color.yellow : Color.white;
         }
     }

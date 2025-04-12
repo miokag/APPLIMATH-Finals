@@ -118,8 +118,4 @@ public class CollisionManager : MonoBehaviour
         }
         return Matrix4x4.identity;
     }
-    public Dictionary<int, AABBBounds> GetAllColliders()
-    {
-        return _colliders;
-    }
 }

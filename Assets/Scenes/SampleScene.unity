@@ -397,7 +397,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &340626626
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -410,15 +410,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c1ec750e522f4747b26b0ed860a40e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyMaterial: {fileID: 2100000, guid: 36bfd90952d4218439c961cf1930e841, type: 2}
   enemyCount: 5
-  enemySize: 1
-  moveSpeed: 2
-  minMoveDistance: 3
-  maxMoveDistance: 8
-  spawnPadding: 7
-  damageToPlayer: 1
-  damageCooldown: 3
+  enemyMaterial: {fileID: 2100000, guid: 36bfd90952d4218439c961cf1930e841, type: 2}
+  enemyWidth: 1
+  enemyHeight: 1
+  enemyDepth: 1
+  movementSpeed: 2
+  groundY: -20
+  patrolDistance: 5
+  spawnHeight: 0.5
+  collisionBumpForce: 1
+  collisionDetectionPadding: 0.05
+  damageAmount: 1
+  damageCooldown: 0.7
+  minSpawnDistanceFromPlayer: 10
+  enemySpacing: 10
 --- !u!4 &340626627
 Transform:
   m_ObjectHideFlags: 0
@@ -1233,7 +1239,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1285485414
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1251,6 +1257,26 @@ MonoBehaviour:
   doorWidth: 1
   doorHeight: 2
   doorDepth: 0.5
+  minClearRadius: 5
+  doorMesh: {fileID: 0}
+  doorMatrix:
+    e00: 0
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 0
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 0
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 0
+  doorColliderId: 0
 --- !u!4 &1285485415
 Transform:
   m_ObjectHideFlags: 0
@@ -1266,6 +1292,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1300725710
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1300725712}
+  - component: {fileID: 1300725711}
+  m_Layer: 0
+  m_Name: Powerups
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1300725711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300725710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1642d83f5e22434da96590f2ba04f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  meshGenerator: {fileID: 1548962865}
+  healthPowerUpMaterial: {fileID: 2100000, guid: 18fc45b117ddeb6429297a9b25cc577b, type: 2}
+  invincibilityPowerUpMaterial: {fileID: 2100000, guid: 69fde2c9e60728b4ebfd299891d20449, type: 2}
+  fireballPowerUpMaterial: {fileID: 2100000, guid: 8c09176124ee2794083017350c85651b, type: 2}
+  powerUpCount: 10
+  powerUpHeight: 1
+  powerUpSize: 0.5
+  spawnPadding: 4
+--- !u!4 &1300725712
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300725710}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 29.554487, y: 18.930378, z: -65.715294}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1548962864
 GameObject:
   m_ObjectHideFlags: 0
@@ -1276,7 +1354,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1548962866}
   - component: {fileID: 1548962865}
-  - component: {fileID: 1548962867}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1330,26 +1407,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1548962867
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1548962864}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1642d83f5e22434da96590f2ba04f52, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  meshGenerator: {fileID: 1548962865}
-  healthPowerUpMaterial: {fileID: 2100000, guid: 18fc45b117ddeb6429297a9b25cc577b, type: 2}
-  invincibilityPowerUpMaterial: {fileID: 2100000, guid: 69fde2c9e60728b4ebfd299891d20449, type: 2}
-  fireballPowerUpMaterial: {fileID: 2100000, guid: 8c09176124ee2794083017350c85651b, type: 2}
-  powerUpCount: 10
-  powerUpHeight: 1
-  powerUpSize: 0.5
-  spawnPadding: 4
 --- !u!1 &2144055821
 GameObject:
   m_ObjectHideFlags: 0
@@ -1414,3 +1471,4 @@ SceneRoots:
   - {fileID: 340626627}
   - {fileID: 2144055823}
   - {fileID: 1285485415}
+  - {fileID: 1300725712}
